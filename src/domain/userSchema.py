@@ -29,6 +29,9 @@ class UserListFilter(Filter):
   offset: Optional[int] = 0
   limit: Optional[int] = 100
 
-  class Constants(Filter.Constants):
-    model = userModel.User
-    search_model_fields = ["name", "email"]
+class Constants(Filter.Constants):
+  model = userModel.User
+  search_model_fields = ["name", "email"]
+
+class RoleUpdate(BaseModel):
+  role: str  

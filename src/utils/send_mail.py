@@ -22,8 +22,12 @@ conf = ConnectionConfig(
 
 fm = FastMail(conf)
 
-async def send_verification_code(email: str, code: int) -> JSONResponse:
-  html = f"<p>Seja bem vindo ao UnB-TV! Para confirmar a criação da sua conta utilize o código <strong>{code}</strong></p>"
+async def send_verification_code(email: str, code: int, is_unb: bool =False) -> JSONResponse:
+  html = f"<p>Seja bem-vindo ao UnB-TV! Para confirmar a criação da sua conta, utilize o código <strong>{code}</strong></p>"
+  
+  DEPLOY_URL = os.getenv("DEPLOY_URL")
+  if is_unb:
+      html += f"<p>Como usuário da UnB, você pode configurar uma senha de administrador acessando o seguinte link após ativar sua conta: <a href='{DEPLOY_URL}/adminActivate?email={email}'>Configurar Senha de Administrador</a></p>"
 
   message = MessageSchema(
     subject="Confirme a criação da sua conta",

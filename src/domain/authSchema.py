@@ -45,3 +45,6 @@ class ResetPasswordUpdate(BaseModel):
 
 class Connections(BaseModel):
   vinculos: List[str]
+
+class AdminSetup(BaseModel):
+  email: EmailStr

@@ -8,4 +8,5 @@ data/postgress
 .pytest_cache
 data
 .coverage
+*junit*
 .vercel

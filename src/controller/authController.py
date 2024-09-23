@@ -1,3 +1,6 @@
+import os
+import re 
+from typing import List
 from fastapi import APIRouter, HTTPException, Response, status, Depends
 from  utils import security, enumeration, send_mail
 from  database.database import get_db
@@ -5,6 +8,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from  constants import errorMessages
 from starlette.responses import JSONResponse
+from utils import security, enumeration
 
 from  domain import userSchema, authSchema
 from  repository import userRepository
@@ -41,7 +45,10 @@ async def register(data: authSchema.UserCreate, db: Session = Depends(get_db)):
 
   userRepository.create_user(db, name=data.name, connection=data.connection, email=data.email, password=hashed_password, activation_code=activation_code)
   
-  await send_mail.send_verification_code(email=data.email, code=activation_code)
+  if re.search(r"unb", data.email):
+    await send_mail.send_verification_code(email=data.email, code=activation_code, is_unb=True)
+  else:
+    await send_mail.send_verification_code(email=data.email, code=activation_code)
 
   return JSONResponse(status_code=201, content={ "status": "success" })
 
@@ -103,7 +110,6 @@ async def send_new_code(data: authSchema.SendNewCode, db: Session = Depends(get_
   if user.is_active:
     return JSONResponse(status_code=400, content={ "status": "error", "message": errorMessages.ACCOUNT_ALREADY_ACTIVE })
 
-  res = await send_mail.send_verification_code(email=data.email, code=user.activation_code)
   return JSONResponse(status_code=201, content={ "status": "success" })
 
   # Recebe dados de validação de conta
@@ -121,6 +127,39 @@ async def validate_account(data: authSchema.AccountValidation, db: Session = Dep
 
   userRepository.activate_account(db, user)
   return JSONResponse(status_code=200, content={ "status": "success" })
+
+ # cadastro da senha de admin / role do admin
+@auth.post('/admin-setup')
+async def admin_setup(data: authSchema.AdminSetup, db: Session = Depends(get_db), token: dict = Depends(security.verify_token_admin)):
+    user = userRepository.get_user_by_email(db, data.email)
+    if not user:
+      raise HTTPException(status_code=404, detail=errorMessages.USER_NOT_FOUND)
+
+    if not user.is_active:
+      raise HTTPException(status_code=400, detail="Account is not active")
+
+    if not re.search(r"unb", data.email):
+      raise HTTPException(status_code=400, detail="Account is not @unb")
+    
+    userRepository.update_user_role(db, user, "COADMIN")
+
+    return JSONResponse(status_code=200, content={"status": "success"})
+
+@auth.post('/super-admin-setup')
+async def super_admin_setup(data: authSchema.AdminSetup, db: Session = Depends(get_db), token: dict = Depends(security.verify_token_admin)):
+    user = userRepository.get_user_by_email(db, data.email)
+    if not user:
+      raise HTTPException(status_code=404, detail=errorMessages.USER_NOT_FOUND)
+
+    if not user.is_active:
+      raise HTTPException(status_code=400, detail="Account is not active")
+
+    if not re.search(r"unb", data.email):
+      raise HTTPException(status_code=400, detail="Account is not @unb")
+    
+    userRepository.update_user_role(db, user, "ADMIN")
+
+    return JSONResponse(status_code=200, content={"status": "success"})
 
 @auth.post('/reset-password/request')
 async def request_password_(data: authSchema.ResetPasswordRequest, db: Session = Depends(get_db)):

@@ -2,10 +2,11 @@ from fastapi import APIRouter, HTTPException, Response, status, Depends, Header
 from  database.database import get_db
 from sqlalchemy.orm import Session
 
-from  constants import errorMessages
-from  domain import userSchema
-from  repository import userRepository
-from  utils import security, enumeration
+from constants import errorMessages
+from domain import userSchema
+from repository import userRepository
+from utils import security, enumeration
+from domain.userSchema import RoleUpdate
 
 from fastapi_filter import FilterDepends
 
@@ -88,3 +89,27 @@ def update_role(user_id: int, db: Session = Depends(get_db), token: dict = Depen
   user = userRepository.update_user_role(db, db_user=user, role=new_role)
 
   return user
+
+@user.patch("/role/superAdmin/{user_id}", response_model=userSchema.User)
+def update_role_superAdmin(user_id: int, role_update: RoleUpdate, db: Session = Depends(get_db), token: dict = Depends(security.verify_token)):
+    # Obtem email do usuario a partir do token.
+    # Verifica se o usuário é ADMIN
+    requesting_user = userRepository.get_user_by_email(db, email=token['email'])
+    if requesting_user.role != enumeration.UserRole.ADMIN.value:
+        raise HTTPException(status_code=401, detail=errorMessages.NO_PERMISSION)
+
+    # Verificar se o usuario a ser modificado existe
+    user = userRepository.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail=errorMessages.USER_NOT_FOUND)
+
+    new_role = role_update.role
+    # Verifica se a nova role é ADMIN ou COADMIN e se o email contém "unb"
+    if new_role in [enumeration.UserRole.ADMIN.value, enumeration.UserRole.COADMIN.value]:
+        if "unb" not in user.email:
+            raise HTTPException(status_code=400, detail="Usuários com roles ADMIN ou COADMIN devem ter um email contendo 'unb'.")
+
+    # Atualiza a role do usuário
+    user = userRepository.update_user_role(db, db_user=user, role=new_role)
+
+    return user

@@ -1,6 +1,6 @@
 import os, secrets
 from fastapi import Depends, HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
@@ -28,7 +28,7 @@ def create_access_token(data: dict):
   access_token_expires = timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
 
   to_encode = data.copy()
-  expire = datetime.utcnow() + access_token_expires
+  expire = datetime.now(timezone.utc) + access_token_expires
   
   to_encode.update({ "exp": expire, **data })
   encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -37,7 +37,18 @@ def create_access_token(data: dict):
 def verify_token(token: str = Depends(oauth2_scheme)):
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    # print(payload["role"])
     return payload
+  except JWTError:
+    raise HTTPException(status_code=401, detail=errorMessages.INVALID_TOKEN)
+  
+def verify_token_admin(token: str = Depends(oauth2_scheme)):
+  try:
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    if payload["role"] == "ADMIN":
+      return payload
+    else:
+      raise HTTPException(status_code=401, detail=errorMessages.INVALID_TOKEN)
   except JWTError:
     raise HTTPException(status_code=401, detail=errorMessages.INVALID_TOKEN)
 
@@ -49,7 +60,7 @@ def create_refresh_token(data:dict):
 
   to_encode = data.copy()
   if access_token_expires:
-    expire = datetime.utcnow() + access_token_expires
+    expire = datetime.now(timezone.utc) + access_token_expires
 
   to_encode.update({"exp": expire})
   encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
