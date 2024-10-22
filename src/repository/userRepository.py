@@ -1,11 +1,9 @@
-from repository import userRepository
-
 # Referencia: https://fastapi.tiangolo.com/tutorial/sql-databases/#crud-utils
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from domain import userSchema
-from model import userModel
+from  domain import userSchema
+from  model import userModel
 
 # Obtem usuario a partir do seu ID
 def get_user(db: Session, user_id: int):

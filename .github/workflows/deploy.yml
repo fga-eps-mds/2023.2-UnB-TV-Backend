@@ -1,0 +1,20 @@
+name: Trigger Fork Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  trigger-workflow:
+    runs-on: ubuntu-latest
+    environment: actions
+
+    steps:
+      - name: Trigger workflow in forked repo
+        run: |
+          curl -X POST https://api.github.com/repos/victorleaoo/2024.1-UnB-TV-Users/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -H 'Authorization: token ${{ secrets.API_TOKEN_GITHUB }}' \
+          --data '{"event_type": "Trigger Workflow", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'

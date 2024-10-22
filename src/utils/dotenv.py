@@ -1,5 +1,5 @@
 import os
-from constants import errorMessages
+from  constants import errorMessages
 
 def validate_dotenv():
   required_env_var = ["SECRET", "ALGORITHM", "MAIL_USERNAME", "MAIL_PASSWORD", "MAIL_FROM", "MAIL_PORT", "MAIL_SERVER"]

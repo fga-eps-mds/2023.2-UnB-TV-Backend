@@ -1,3 +1,4 @@
+aioresponses==0.7.6
 aiosmtplib==2.0.2
 annotated-types==0.6.0
 anyio==3.7.1

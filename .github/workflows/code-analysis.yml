@@ -4,6 +4,7 @@ on: push
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
+    environment: actions
 
     services:
       postgres:
@@ -45,6 +46,13 @@ jobs:
           POSTGRES_HOST: localhost
           POSTGRES_DB: postgres
           POSTGRES_PORT: 5432
+          SECRET: nono
+          ALGORITHM: HS256
+          MAIL_USERNAME: unbtv@gmail.com
+          MAIL_PASSWORD: 777
+          MAIL_FROM: unbtv@gmail.com
+          MAIL_PORT: 587
+          MAIL_SERVER: smtp.gmail.com
 
       - name: Gera arquivos de testes no formato .xml
         run: python3 -m coverage xml 

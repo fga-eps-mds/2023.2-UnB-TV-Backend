@@ -15,3 +15,4 @@ class UserConnection(Enum):
 class UserRole(Enum):
   ADMIN = "ADMIN"
   USER = "USER"
+  COADMIN = "COADMIN"
